@@ -3,6 +3,10 @@ const Users  = require('../models/Users');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+var jwt = require('jsonwebtoken');
+let fetchuser = require('../middleware/fetchuser')
+const { findOne } = require('../models/Users');
+// var token = jwt.sign({ foo: 'bar' }, 'shhhhh');
 
 //create a user add end[point]: POST /api/auth
 // router.post('/', async (req,resp)=>{
@@ -11,7 +15,7 @@ const bcrypt = require('bcryptjs');
 //     await users.save()
 //     resp.send(req.body)
 // })
-//END POINT: POST /api/auth/createuser
+//create a new user: POST /api/auth/createuser: no loging required
 router.post('/createuser',
     [
         body('name').isLength({ min: 3 }),
@@ -24,10 +28,11 @@ router.post('/createuser',
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
+    
     console.log((req.body))
     //check if user email already exist in DB.
-    let user = await Users.findOne({email: req.body.email})
-    if(user){
+    let users = await Users.findOne({email: req.body.email})
+    if(users){
         return res.status(400).json({error:"User with same email id is already exist."})
     }
     //generating hash code for security purpose.
@@ -37,35 +42,67 @@ router.post('/createuser',
     //for saving data into database
     try{
         users = await Users.create(req.body)
-        res.status(200).json(users)
+        //generating token using JWT
+        const token = jwt.sign({ user:{id: users.id} }, 'ITsKEY');
+        res.status(200).json({token})
     }catch(error){
         console.log(error.message)
         res.status(500).json({message:error.message})
     }
 })
 
-router.get('/',async(req,res)=>{
-    console.log((req.body))
-    try{
-        const users = await Users.create(req.body)
-        res.status(200).json(users)
-    }catch(error){
-        console.log(error.message)
+
+//Authenticate a user: POST /api/auth/login: no loging required
+router.post('/login',
+    [
+        // body('name').isLength({ min: 3 }),
+        body('email',"Email should be correct!").isEmail(),
+        body('password',"Password cannt be empty").isLength({ min: 1 }),
+    ],
+    async(req,res)=>{
+        console.log("inside login")
+        //for validation
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+        }
+        const {email,password} = req.body
+        try{
+  
+            const user = await Users.findOne({email})
+            if(!user){
+                return res.status(400).json({msg:"Please enter correct credentials."})
+            }
+
+            const hashPass = await bcrypt.compare(password, user.password)
+            if(!hashPass){
+                return res.status(400).json({msg:"Please enter correct credentials."})
+            }
+            //generating token using JWT
+            const token = jwt.sign({ user:{id: user.id} }, 'ITsKEY');
+            return res.status(200).json({token})
+    }
+    catch(error){
         res.status(500).json({message:error.message})
     }
-})
 
-// router.get('/',async (req, resp)=>{
-//     console.log(req.body)
-//     const users = Users(req.body)
-//     await users.save()
-//     console.log("inside POST")
+    })
 
-//     resp.send(req.body)
 
-// })
+//Authenticate a user: POST /api/auth/getuser: Loging required
+router.post('/getuser', fetchuser,  async(req,res)=>{
+    try {
+        let userId  = req.user.id
+        const user = await Users.findById(userId).select("-password")//fins using id and fetch all data except password
+        res.send(user)
+    } catch (error) {
+        res.status(500).send("Internal Server Error/")
+    }
+       
+        
+    })
+
+
 
 module.exports = router
-
-
 
