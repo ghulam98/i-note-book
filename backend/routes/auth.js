@@ -6,16 +6,8 @@ const bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
 let fetchuser = require('../middleware/fetchuser')
 const { findOne } = require('../models/Users');
-// var token = jwt.sign({ foo: 'bar' }, 'shhhhh');
 
-//create a user add end[point]: POST /api/auth
-// router.post('/', async (req,resp)=>{
-//     console.log(req.body,"post")
-//     const users = Users(req.body)
-//     await users.save()
-//     resp.send(req.body)
-// })
-//create a new user: POST /api/auth/createuser: no loging required
+//Route1: create a new user: POST /api/auth/createuser: no loging required
 router.post('/createuser',
     [
         body('name').isLength({ min: 3 }),
@@ -52,7 +44,7 @@ router.post('/createuser',
 })
 
 
-//Authenticate a user: POST /api/auth/login: no loging required
+//Route2: Authenticate a user: POST /api/auth/login: no loging required
 router.post('/login',
     [
         // body('name').isLength({ min: 3 }),
@@ -89,11 +81,15 @@ router.post('/login',
     })
 
 
-//Authenticate a user: POST /api/auth/getuser: Loging required
+//Route3: Authenticate a user: POST /api/auth/getuser: Loging required
 router.post('/getuser', fetchuser,  async(req,res)=>{
     try {
         let userId  = req.user.id
         const user = await Users.findById(userId).select("-password")//fins using id and fetch all data except password
+        console.log(user,"OOOOO")
+        if(!user){
+            return res.status(401).send("User is not valid for")
+        }
         res.send(user)
     } catch (error) {
         res.status(500).send("Internal Server Error/")
