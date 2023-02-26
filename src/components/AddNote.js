@@ -2,17 +2,17 @@ import React, { useContext, useState } from 'react'
 import notesContext from '../context/notes/noteContext'
 
 
-export default function AddNote() {
+export default function AddNote({showAlert}) {
     const {addNote} = useContext(notesContext);
 
     const [note, setNote] = useState({title:"", description:"", tag:""})
     const submit = (e)=>{
         e.preventDefault()
-        console.log("submiting")
         addNote(note.title, note.description, note.tag)
+        setNote({title:"", description:"", tag:""})
+        showAlert("Added note successfully!", "success")
     }
     const change = (e)=>{
-        console.log(e.target.name, e.target.value, "chnage")
         setNote({...note, [e.target.name]:e.target.value})
     }
   return (
@@ -21,18 +21,18 @@ export default function AddNote() {
 <form onSubmit={submit}>
   <div className="mb-3">
     <label htmlFor="title" className="form-label">Title</label>
-    <input type="text" className="form-control" id="title" name='title'  onChange={change}/>
+    <input type="text" className="form-control" id="title" value={note.title} required name='title'  onChange={change}/>
   </div>
   <div className="mb-3">
     <label  className="form-label">Description</label>
-    <input type="text" className="form-control" id="description" name='description' onChange={change}/>
+    <input type="text" className="form-control" id="description" value={note.description} required name='description' onChange={change}/>
   </div>
   <div className="mb-3">
     <label  className="form-label">Tag</label>
-    <input type="text" className="form-control" id="tag" name='tag' onChange={change}/>
+    <input type="text" className="form-control" id="tag" value={note.tag} required name='tag' onChange={change}/>
   </div>
  
-  <button type="submit" className="btn btn-primary">Add</button>
+  <button type="submit" disabled={note.description.length < 5 || note.title.length  < 5 || note.tag.length  < 4} className="btn btn-primary">Add</button>
 </form>
     </div>
   )

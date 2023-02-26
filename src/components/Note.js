@@ -1,10 +1,9 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import notesContext from '../context/notes/noteContext'
 import AddNote from './AddNote'
 import NoteItem from './NoteItem'
 
-export default function Note() {
+export default function Note({showAlert}) {
     const {notes, getAllNotes, editNote} = useContext(notesContext)
     useEffect(()=>{
         getAllNotes();
@@ -14,20 +13,16 @@ export default function Note() {
     const refClose = useRef(null)
     const [updatedNote, setupdatedNote] = useState({id:"","etitle":"", "edescription":"", "etag":""})
     const update = (note)=>{
-        console.log("updadt", note)
         ref.current.click()
         setupdatedNote({id:note._id,"etitle":note.title, "edescription":note.description, "etag":note.tag})
-        console.log("updadt2")
     }
     const change = (e)=>{
         setupdatedNote({...updatedNote,[e.target.name]:e.target.value, })
 
-        console.log(updatedNote)
     }
 
     const clickHandle = ()=>{
-        console.log("updating note.....",updatedNote)
-        editNote(updatedNote)
+        editNote(updatedNote, showAlert)
         setTimeout(() => {
             
             refClose.current.click()
@@ -38,7 +33,7 @@ export default function Note() {
  
     
         <>
-  <AddNote/>
+  <AddNote showAlert = {showAlert}/>
 
 <button ref={ref} type="button" className="btn btn-primary d-none" data-bs-toggle="modal" data-bs-target="#exampleModal" >
   Launch demo modal
@@ -70,20 +65,24 @@ export default function Note() {
       </div>
       <div className="modal-footer">
         <button type="button" ref={refClose} className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" className="btn btn-primary" onClick={clickHandle}>Update Note</button>
+        <button type="button" disabled={updatedNote.edescription.length < 4 || updatedNote.etitle.length  < 4 || updatedNote.etag.length  < 4} className="btn btn-primary" onClick={clickHandle}>Update Note</button>
       </div>
     </div>
   </div>
 </div>     
 
 
-        <div className='row'>
+        <div className='row my-3'>
         <h2>All notes here</h2>
-        {
+        <div className='container' style={{"color":"red"}}>
+            {notes.length ===0 && "No any notes till now added by you. Add new for listing here. "}
+        </div>
+        
+        { 
             notes.map((note)=>{
                 return    (
                     <div className='col-md-3 my-3' key={note._id}>
-                <NoteItem note={note} update={update}/>
+                <NoteItem note={note} update={update} showAlert = {showAlert}/>
                 </div>
                 )
                 

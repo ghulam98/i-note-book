@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
 import NotesContext from './noteContext'
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjNmMjIwYzBmNDQ3NjM0ZmNlYzRkZTRkIn0sImlhdCI6MTY3NjgxMjc1N30.gLiL9VAeWQv4sSQ-Mr7Y91e-N2FxuMpjm1b0q0oCEpM"
+//const token = localStorage.getItem('token')//"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjNmMjIwYzBmNDQ3NjM0ZmNlYzRkZTRkIn0sImlhdCI6MTY3NjgxMjc1N30.gLiL9VAeWQv4sSQ-Mr7Y91e-N2FxuMpjm1b0q0oCEpM"
 const host = "http://localhost:5000/"
 
 const NoteState = (props)=>{
@@ -10,7 +10,6 @@ const NoteState = (props)=>{
     
     //Get All notes
     const getAllNotes = async()=>{
-        console.log("all nodecalll",token)
         try{
 
             const response = await fetch(`${host}api/notes/fetchallnotes`, {
@@ -18,7 +17,7 @@ const NoteState = (props)=>{
                 headers: {
                   'Content-Type': 'application/json',
                   // 'Content-Type': 'application/x-www-form-urlencoded',
-                  'auth-token':token
+                  'auth-token':localStorage.getItem('token')
                 },
                 
               });
@@ -33,7 +32,6 @@ const NoteState = (props)=>{
 
     //ADD note
     const addNote = async(title, desc, tag)=>{
-        console.log("inside add",title,desc, tag)
  
         try{
 
@@ -42,13 +40,12 @@ const NoteState = (props)=>{
                 headers: {
                   'Content-Type': 'application/json',
                   // 'Content-Type': 'application/x-www-form-urlencoded',
-                  'auth-token':token
+                  'auth-token':localStorage.getItem('token')
                 },
                 body: JSON.stringify({title, description:desc, tag})
                 
               });
-               const data = await response.json();
-               console.log(data)
+              console.log(response)
                getAllNotes()// for fetching all notes including just added new one
         }catch(e){
             console.log("connectionm refused server down", e.message)
@@ -58,8 +55,7 @@ const NoteState = (props)=>{
     }
     
     //Edit note
-    const editNote = async(updatedData)=>{
-        console.log("inside edit", updatedData)
+    const editNote = async(updatedData,showAlert)=>{
         try{
 
             const response = await fetch(`${host}api/notes/updatenote/${updatedData.id}`, {
@@ -67,15 +63,14 @@ const NoteState = (props)=>{
                 headers: {
                   'Content-Type': 'application/json',
                   // 'Content-Type': 'application/x-www-form-urlencoded',
-                  'auth-token':token
+                  'auth-token':localStorage.getItem('token')
                 },
                 body: JSON.stringify({title:updatedData.etitle, description:updatedData.edescription, tag:updatedData.etag})
                 
               });
-               const respData = await response.json();
-            //    setNotes(respData)
-            console.log("updated respData saved inside server successfully...",respData)
+              console.log(response)
             getAllNotes()// for fetching all notes so that we can see wether note is deletd or not
+            showAlert("Note updated successfully!", "success")
         }catch(e){
             console.log("connectionm refused server down", e.message)
         }
@@ -83,9 +78,7 @@ const NoteState = (props)=>{
     }
     
     //DELETE note
-    const deleteNote = async(id)=>{
-        console.log("inside delete",id)
-        // setNotes(notes.filter((note)=>note._id !== id))
+    const deleteNote = async(id,showAlert)=>{
         try{
 
             const response = await fetch(`${host}api/notes/deletenote/${id}`, {
@@ -93,13 +86,14 @@ const NoteState = (props)=>{
                 headers: {
                   'Content-Type': 'application/json',
                   // 'Content-Type': 'application/x-www-form-urlencoded',
-                  'auth-token':token
+                  'auth-token':localStorage.getItem('token')
                 },
                 
               });
-               const data = await response.json();
             //    setNotes(data)
             getAllNotes()// for fetching all notes so that we can see wether note is deletd or not
+            showAlert("Note deleted successfully!", "danger")
+            console.log(response)
         }catch(e){
             console.log("connectionm refused server down", e.message)
         }
